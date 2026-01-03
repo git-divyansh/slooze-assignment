@@ -1,0 +1,15 @@
+import pkg from '@prisma/client'
+import { PrismaNeon } from '@prisma/adapter-neon'
+
+const { PrismaClient } = pkg
+
+const globalForPrisma = globalThis
+
+const adapter = new PrismaNeon({
+  connectionString: process.env.DATABASE_URL, // pooled Neon URL
+})
+
+export const prisma =
+  globalForPrisma.prisma || new PrismaClient({ adapter })
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Fury Food — Next.js RBAC Food Ordering App
 
-## Getting Started
+A full-stack web app built with **Next.js (App Router)**, **Tailwind CSS**, **Prisma v7** and **Neon Postgres**.  
+It supports Restaurants/Menu browsing, Cart → Checkout/Pay, Order Cancelation, and Payment Method selection, with **RBAC** + **country-scoped** access enforced on the server.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Tech Stack
+
+- Next.js (App Router) + Route Handlers for APIs [web:37]
+- Tailwind CSS (responsive UI)
+- Prisma **Client v7.x** + Prisma Config (`prisma.config.ts`) for migrations/config [web:67]
+- Neon Postgres (pooled + direct connection strings) [web:386]
+
+---
+
+## Live site
+
+```
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Prerequisites (Follow below steps to setup from scratch)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **Node.js** 18+ (recommended) and npm
+- A **Neon** Postgres project + database (free tier is fine)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 1) Clone & install dependencies
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+git clone <YOUR_REPO_URL>
+cd <YOUR_REPO_FOLDER>
+npm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 2) Create account on neon
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+https://neon.com/docs/introduction
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 3) Configure environment variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Runtime (Next.js app / Prisma Client via Neon adapter) — pooled URL
+```
+DATABASE_URL="postgresql://USER:PASSWORD@ep-xxxxxx-pooler.REGION.aws.neon.tech/DB?sslmode=require"
+```
+
+# Prisma CLI (migrate/studio) — direct URL (next line if you use Prisma <5.10)
+```
+DIRECT_URL="postgresql://USER:PASSWORD@ep-xxxxxx.REGION.aws.neon.tech/DB?sslmode=require"
+```
+
+# Session signing/entropy (any long random string)
+```
+SESSION_SECRET="replace-with-a-long-random-string"
+```
+
+## 4) Run migrations and generate Prisma Client
+
+```npx prisma generate
+npx prisma migrate dev
+```
+## 6) Seed dummy data (Nick Fury + employees + restaurants + menu)
+
+```
+node prisma/seed.js
+```
+
+## 7) Start the dev server
+
+```
+npm run dev
+```
+
+## Seeded logins (for testing)
+
+### Password for all seeded users: Password@123
+
+### Emails:
+
+```
+nick@fury.com (ADMIN)
+
+marvel@fury.com (MANAGER, INDIA)
+
+america@fury.com (MANAGER, AMERICA)
+
+thanos@fury.com (MEMBER, INDIA)
+
+thor@fury.com (MEMBER, INDIA)
+
+travis@fury.com (MEMBER, AMERICA)
+```
+
+## Cookies not working on localhost
+If your session cookie is set with secure: true, it won’t be stored on http://localhost.
+Use secure: process.env.NODE_ENV === "production" for local dev.
+
+## Access management
+
+| Feature               | Admin | Manager | Member |
+| --------------------- | ----- | ------- | ------ |
+| View restaurants/menu | ✅     | ✅       | ✅      |
+| Add items to cart     | ✅     | ✅       | ✅      |
+| Checkout & pay        | ✅     | ✅       | ❌      |
+| Cancel order          | ✅     | ✅       | ❌      |
+| Update payment method | ✅     | ❌       | ❌      |

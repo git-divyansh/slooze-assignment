@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum Country {
+  INDIA
+  AMERICA
+}
+
+enum OrderStatus {
+  CART
+  PLACED
+  CANCELED
+}
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  name         String
+  passwordHash String
+  role         Role
+  country      Country
+
+  paymentMethod PaymentMethod?
+  orders        Order[]
+  sessions      Session[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Restaurant {
+  id        String     @id @default(cuid())
+  name      String
+  country   Country
+  menuItems MenuItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([country])
+}
+
+model MenuItem {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  name       String
+  priceCents Int
+  isActive   Boolean @default(true)
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  orderItems OrderItem[]
+
+  @@index([restaurantId])
+}
+
+model Order {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  country Country
+  status  OrderStatus @default(CART)
+
+  items      OrderItem[]
+  totalCents Int         @default(0)
+
+  paymentRef String? // from payment gateway if needed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([country])
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+
+  qty        Int
+  priceCents Int // snapshot price at time of adding
+}
+
+model PaymentMethod {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // demo fields (don’t store raw card data in production)
+  label String
+  last4 String
+  brand String
+  token String? // token from gateway (Stripe/others)
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
