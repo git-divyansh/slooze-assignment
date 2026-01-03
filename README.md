@@ -16,8 +16,8 @@ It supports Restaurants/Menu browsing, Cart → Checkout/Pay, Order Cancelation,
 
 ## Live site
 
-```
-```
+[slooze-assignment-25154f52h-git-divyanshs-projects.vercel.app](https://slooze-assignment-five.vercel.app/login)
+
 
 ## Prerequisites (Follow below steps to setup from scratch)
 
